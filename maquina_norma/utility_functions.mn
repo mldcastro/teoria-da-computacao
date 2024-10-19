@@ -1,0 +1,87 @@
+test compare_registers(Reg1,Reg2){
+  1: if zero Reg1 then goto 2 else goto 3
+  2: if zero Reg2 then goto true else goto false
+  3: if zero Reg2 then goto false else goto 4
+  4: do dec Reg1 goto 5
+  5: do dec Reg2 goto 1
+}
+
+operation clear(Reg){
+  1: do dec Reg goto 2
+  2: if zero Reg then goto 0 else goto 1
+}
+
+operation copy(Src,Dst){
+  1: do clear(Dst) goto 2
+  2: if zero Src then goto 0 else goto 3
+  3: do inc Dst goto 4
+  4: do dec Src goto 2
+}
+
+operation safe_copy(Src,Dst,Aux){
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: if zero Src then goto 7 else goto 4
+  4: do inc Dst goto 5
+  5: do inc Aux goto 6
+  6: do dec Src goto 3
+  7: if zero Aux then goto 0 else goto 8
+  8: do inc Src goto 9
+  9: do dec Aux goto 7
+}
+
+operation double_reg(Reg,Aux){
+  1: do copy(Reg,Aux) goto 2
+  2: if zero Aux then goto 0 else goto 3
+  3: do dec Aux goto 4
+  4: do add Reg 2 goto 2
+}
+
+operation safe_double_reg(Reg,Dst,Aux){
+  1: do safe_copy(Reg,Dst,Aux) goto 2
+  2: do double_reg(Dst,Aux) goto 0
+}
+
+operation triple_reg(Reg,Aux){
+  1: do copy(Reg,Aux) goto 2
+  2: if zero Aux then goto 0 else goto 3
+  3: do dec Aux goto 4
+  4: do add Reg 3 goto 2
+}
+
+operation safe_triple_reg(Reg,Dst,Aux){
+  1: do safe_copy(Reg,Dst,Aux) goto 2
+  2: do triple_reg(Dst,Aux) goto 0
+}
+
+operation two_to_the_power_of_reg(Reg,Dst,Aux){
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: do inc Dst goto 4
+  4: if zero Reg then goto 0 else goto 5
+  5: do double_reg(Dst,Aux) goto 6
+  6: do dec Reg goto 4
+}
+
+operation safe_two_to_the_power_of_reg(Reg,Dst,RegCopy,Aux){
+  1: do safe_copy(Reg,RegCopy,Aux) goto 2
+  2: do two_to_the_power_of_reg(RegCopy,Dst,Aux) goto 0
+}
+
+operation three_to_the_power_of_reg(Reg,Dst,Aux){
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: do inc Dst goto 4
+  4: if zero Reg then goto 0 else goto 5
+  5: do triple_reg(Dst,Aux) goto 6
+  6: do dec Reg goto 4
+}
+
+operation safe_three_to_the_power_of_reg(Reg,Dst,RegCopy,Aux){
+  1: do safe_copy(Reg,RegCopy,Aux) goto 2
+  2: do three_to_the_power_of_reg(RegCopy,Dst,Aux) goto 0
+}
+
+main{
+ 1: do safe_three_to_the_power_of_reg(X,Y,A,B) goto 0
+}
