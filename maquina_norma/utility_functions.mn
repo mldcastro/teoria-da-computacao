@@ -30,6 +30,17 @@ operation safe_copy(Src,Dst,Aux){
   9: do dec Aux goto 7
 }
 
+operation safe_sum(Acc,B,Aux){
+  1: do clear(Aux) goto 2
+  2: if zero B then goto 6 else goto 3
+  3: do dec B goto 4
+  4: do inc Acc goto 5
+  5: do inc Aux goto 2
+  6: if zero Aux then goto 0 else goto 7
+  7: do dec Aux goto 8
+  8: do inc B goto 6
+}
+
 operation double_reg(Reg,Aux){
   1: do copy(Reg,Aux) goto 2
   2: if zero Aux then goto 0 else goto 3
@@ -82,6 +93,25 @@ operation safe_three_to_the_power_of_reg(Reg,Dst,RegCopy,Aux){
   2: do three_to_the_power_of_reg(RegCopy,Dst,Aux) goto 0
 }
 
+operation fake_fibonacci(N,Acc,Last,FibAux,NCopy,CopyAux){
+  1: do clear(Acc) goto 2
+  2: do clear(Last) goto 3
+  3: do clear(FibAux) goto 4
+  4: do clear(NCopy) goto 5
+  5: do clear(CopyAux) goto 6
+  6: do safe_copy(N,NCopy,CopyAux) goto 7
+  7: if zero N then goto 0 else goto 8  // is_zero
+  8: if cmp N 1 then goto 10 else goto 9  // is_one
+  9: do dec N goto 8  // decrement_n
+  10: do add Acc 3 goto 11  // sum_f1
+  11: do double_reg(Last,CopyAux) goto 12  // update_accumulator
+  12: do safe_sum(Acc,Last,CopyAux) goto 13
+  13: do dec NCopy goto 14  // decrement_n_copy
+  14: if zero NCopy then goto 0 else goto 15  // is_end
+  15: do safe_copy(FibAux,Last,CopyAux) goto 16  // update last
+  16: do safe_copy(Acc,FibAux,CopyAux) goto 11  // update_aux
+}
+
 main{
- 1: do safe_three_to_the_power_of_reg(X,Y,A,B) goto 0
+ 1: do fake_fibonacci(X,Y,A,B,C,D) goto 0
 }
