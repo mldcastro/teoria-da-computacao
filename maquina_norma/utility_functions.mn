@@ -100,18 +100,67 @@ operation fake_fibonacci(N,Acc,Last,FibAux,NCopy,CopyAux){
   4: do clear(NCopy) goto 5
   5: do clear(CopyAux) goto 6
   6: do safe_copy(N,NCopy,CopyAux) goto 7
-  7: if zero N then goto 0 else goto 8  // is_zero
-  8: if cmp N 1 then goto 10 else goto 9  // is_one
-  9: do dec N goto 8  // decrement_n
-  10: do add Acc 3 goto 11  // sum_f1
-  11: do double_reg(Last,CopyAux) goto 12  // update_accumulator
+  7: if zero N then goto 0 else goto 8
+  8: if cmp N 1 then goto 10 else goto 9
+  9: do dec N goto 8
+  10: do add Acc 3 goto 11
+  11: do double_reg(Last,CopyAux) goto 12
   12: do safe_sum(Acc,Last,CopyAux) goto 13
-  13: do dec NCopy goto 14  // decrement_n_copy
-  14: if zero NCopy then goto 0 else goto 15  // is_end
-  15: do safe_copy(FibAux,Last,CopyAux) goto 16  // update last
-  16: do safe_copy(Acc,FibAux,CopyAux) goto 11  // update_aux
+  13: do dec NCopy goto 14
+  14: if zero NCopy then goto 0 else goto 15
+  15: do safe_copy(FibAux,Last,CopyAux) goto 16
+  16: do safe_copy(Acc,FibAux,CopyAux) goto 11
+}
+
+operation div_by_two(Reg,Aux){
+  1: do clear(Aux) goto 2
+  2: do copy(Reg,Aux) goto 3
+  3: if zero Aux then goto 0 else goto 4
+  4: do dec Aux goto 5
+  5: if zero Aux then goto 0 else goto 6
+  6: do dec Aux goto 7
+  7: do inc Reg goto 3
+}
+
+test is_even(Reg,Aux){
+  1: do clear(Aux) goto 2
+  2: do copy(Reg,Aux) goto 3
+  3: if zero Aux then goto true else goto 4
+  4: do dec Aux goto 5
+  5: do inc Reg goto 6
+  6: if zero Aux then goto false else goto 7
+  7: do inc Reg goto 8
+  8: do dec Aux goto 3
+}
+
+operation decode_first(EncodedPairCopy,Dst,Aux){
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: if is_even(EncodedPairCopy,Aux) then goto 4 else goto 6
+  4: do div_by_two(EncodedPairCopy,Aux) goto 5
+  5: do inc Dst goto 3
+  6: do clear(Aux) goto 0
+}
+
+operation decode_second(EncodedPairCopy,Dst,Aux){
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: do dec EncodedPairCopy goto 4
+  4: do div_by_two(EncodedPairCopy,Aux) goto 5
+  5: do copy(EncodedPairCopy,Dst) goto 6
+  6: do clear(Aux) goto 0
+}
+
+operation decode_pair(EncodedPair,First,Second,EncodedPairCopy,Aux){
+  1: do clear(EncodedPairCopy) goto 2
+  2: do clear(Aux) goto 3
+  3: do clear(First) goto 4
+  4: do clear(Second) goto 5
+  5: do safe_copy(EncodedPair,EncodedPairCopy,Aux) goto 6
+  6: do decode_first(EncodedPairCopy,First,Aux) goto 7
+  7: do decode_second(EncodedPairCopy,Second,Aux) goto 0
 }
 
 main{
- 1: do fake_fibonacci(X,Y,A,B,C,D) goto 0
+ 1: do decode_pair(X,First,Second,Copy,Aux) goto 0
 }
