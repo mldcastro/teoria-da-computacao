@@ -1,0 +1,82 @@
+operation clear(Reg){
+  1: do dec Reg goto 2
+  2: if zero Reg then goto 0 else goto 1
+}
+
+operation copy(Src,Dst){
+  1: do clear(Dst) goto 2
+  2: if zero Src then goto 0 else goto 3
+  3: do inc Dst goto 4
+  4: do dec Src goto 2
+}
+
+operation safe_copy(Src,Dst,Aux){
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: if zero Src then goto 7 else goto 4
+  4: do inc Dst goto 5
+  5: do inc Aux goto 6
+  6: do dec Src goto 3
+  7: if zero Aux then goto 0 else goto 8
+  8: do inc Src goto 9
+  9: do dec Aux goto 7
+}
+
+operation safe_sum(Acc,B,Aux){
+  1: do clear(Aux) goto 2
+  2: if zero B then goto 6 else goto 3
+  3: do dec B goto 4
+  4: do inc Acc goto 5
+  5: do inc Aux goto 2
+  6: if zero Aux then goto 0 else goto 7
+  7: do dec Aux goto 8
+  8: do inc B goto 6
+}
+
+operation double_reg(Reg,Aux){
+  1: do copy(Reg,Aux) goto 2
+  2: if zero Aux then goto 0 else goto 3
+  3: do dec Aux goto 4
+  4: do add Reg 2 goto 2
+}
+
+operation fake_fibonacci(N,Acc,Last,FibAux,NCopy,CopyAux){
+  // F_0 = 0
+  // F_1 = 3
+  // F_n = F_(n-1) + 2 * F_(n-2)
+  // 
+  // N := registrador recebendo o valor de n;
+  // Acc := registrador que irá acumular a resposta;
+  // Last := registrador que guardará o F_(n-2);
+  // FibAux := registrador para auxiliar na cópia de F_(n-2);
+  // NCopy := registrador que guardará a cópia de n;
+  // CopyAux := registrador para auxiliar em cópias.
+  // 
+  // Limpar todos os registradores com exceção de N.
+  // Copiar N para NCopy.
+  // Descer toda a árvore de recursões, até chegar em n = 1.
+  // Acumular F_1 no registrador Acc.
+  // Começar a subir a árvore de recursões somando ao registrador
+  // Acc o valor 2 * Last.
+
+  1: do clear(Acc) goto 2
+  2: do clear(Last) goto 3
+  3: do clear(FibAux) goto 4
+  4: do clear(NCopy) goto 5
+  5: do clear(CopyAux) goto 6
+  6: do safe_copy(N,NCopy,CopyAux) goto 7
+  7: if zero N then goto 0 else goto 8
+  8: if cmp N 1 then goto 10 else goto 9
+  9: do dec N goto 8
+  10: do add Acc 3 goto 11
+  11: do double_reg(Last,CopyAux) goto 12
+  12: do safe_sum(Acc,Last,CopyAux) goto 13
+  13: do dec NCopy goto 14
+  14: if zero NCopy then goto 0 else goto 15
+  15: do safe_copy(FibAux,Last,CopyAux) goto 16
+  16: do safe_copy(Acc,FibAux,CopyAux) goto 11
+}
+
+main{
+ 1: do fake_fibonacci(X,Y,A,B,C,D) goto 0
+}

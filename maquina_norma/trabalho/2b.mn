@@ -1,0 +1,106 @@
+operation clear(Reg){
+  1: do dec Reg goto 2
+  2: if zero Reg then goto 0 else goto 1
+}
+
+operation copy(Src,Dst){
+  1: do clear(Dst) goto 2
+  2: if zero Src then goto 0 else goto 3
+  3: do inc Dst goto 4
+  4: do dec Src goto 2
+}
+
+operation safe_copy(Src,Dst,Aux){
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: if zero Src then goto 7 else goto 4
+  4: do inc Dst goto 5
+  5: do inc Aux goto 6
+  6: do dec Src goto 3
+  7: if zero Aux then goto 0 else goto 8
+  8: do inc Src goto 9
+  9: do dec Aux goto 7
+}
+
+operation div_by_two(Reg,Aux){
+  1: do clear(Aux) goto 2
+  2: do copy(Reg,Aux) goto 3
+  3: if zero Aux then goto 0 else goto 4
+  4: do dec Aux goto 5
+  5: if zero Aux then goto 0 else goto 6
+  6: do dec Aux goto 7
+  7: do inc Reg goto 3
+}
+
+test is_even(Reg,Aux){
+  1: do clear(Aux) goto 2
+  2: do copy(Reg,Aux) goto 3
+  3: if zero Aux then goto true else goto 4
+  4: do dec Aux goto 5
+  5: do inc Reg goto 6
+  6: if zero Aux then goto false else goto 7
+  7: do inc Reg goto 8
+  8: do dec Aux goto 3
+}
+
+operation decode_first(EncodedPairCopy,Dst,Aux){
+  // cod(a, b) = 2^a * (2*b + 1)
+  // first := a
+  // 
+  // Encontramos 'a' através de divisões sucessivas de EncodedPairCopy por 2,
+  // até não ser mais possível.
+  // Esta função é a primeira parte da decodificação e precisa
+  // ser rodada primeiro.
+
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: if is_even(EncodedPairCopy,Aux) then goto 4 else goto 6
+  4: do div_by_two(EncodedPairCopy,Aux) goto 5
+  5: do inc Dst goto 3
+  6: do clear(Aux) goto 0
+}
+
+operation decode_second(EncodedPairCopy,Dst,Aux){
+  // cod(a, b) = 2^a * (2*b + 1)
+  // second := b
+  // 
+  // Encontramos 'b' através da subtração de EncodedPairCopy por 1
+  // e depois uma divisão por 2.
+  // Esta função é a segunda parte da decodificação e precisa
+  // ser rodada somente depois de decode_first.
+
+  1: do clear(Dst) goto 2
+  2: do clear(Aux) goto 3
+  3: do dec EncodedPairCopy goto 4
+  4: do div_by_two(EncodedPairCopy,Aux) goto 5
+  5: do copy(EncodedPairCopy,Dst) goto 6
+  6: do clear(Aux) goto 0
+}
+
+operation decode_pair(EncodedPair,First,Second,EncodedPairCopy,Aux){
+  // cod(a, b) = 2^a * (2*b + 1)
+  // first := a
+  // second := b
+
+  1: do clear(EncodedPairCopy) goto 2
+  2: do clear(Aux) goto 3
+  3: do clear(First) goto 4
+  4: do clear(Second) goto 5
+  5: do safe_copy(EncodedPair,EncodedPairCopy,Aux) goto 6
+  6: do decode_first(EncodedPairCopy,First,Aux) goto 7
+  7: do decode_second(EncodedPairCopy,Second,Aux) goto 0
+}
+
+test is_smaller_than_reg(First,Second){
+    1: if zero Second then goto false else goto 2
+    2: if zero First then goto true else goto 3
+    3: do dec First goto 4
+    4: do dec Second goto 1
+}
+
+main{
+ 1: do decode_pair(X,First,Second,Copy,Aux) goto 2
+ 2: do clear(Y) goto 3
+ 3: if is_smaller_than_reg(First,Second) then goto 0 else goto 4
+ 4: do inc Y goto 0
+}
