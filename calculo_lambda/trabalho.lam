@@ -1,0 +1,145 @@
+let
+
+    true = \x y. x;
+    false = \x y. y;
+    
+    if = \b e1 e2. b e1 e2;
+
+    not = \b. b false true;
+    and = \b1 b2. if b1 b2 false;
+    or = \b1 b2. if b1 true b2;
+
+    zero = \f x. x; -- pode-se usar 0 por praticidade
+    um = \f x. f x; -- 1
+    dois = \f x. f (f x); -- 2
+
+    succ = \n. \A B. A (n A B);
+
+    add = \n1 n2. n1 succ n2;
+    fast_add = \n1 n2. \A B. n1 A (n2 A B);
+
+    mult = \n1 n2. n1 (\x. add n2 x) 0;
+    fast_mul = \m n. \p q. m (n p) q;
+
+    is_zero = \n. n (\x. false) true;
+    is_positive = \n. not (is_zero n); 
+
+    pair = \first second. \c. c first second;
+    get_first = \p. p true;
+    get_second = \p. p false;
+
+    swap = \p. pair (get_second p) (get_first p);
+    shift_inc = \p. pair (get_second p) (succ (get_second p));
+ 
+    -- (pred n) calcula n-1 se n>0, n se n=0 
+    pred = \n. get_first (n shift_inc (pair 0 0));
+
+    -- (sub a b) calcula a - b
+    sub = \a b. b pred a;
+
+    -- (menor a b) testa a < b
+    menor = \a b. is_positive (sub b a);
+    
+    empty = \x. true;
+    constructor = pair;
+
+    is_empty = \l. l (\a b. false);
+    head = get_first;
+    tail = get_second;
+
+    fixed_point_combinator = \f. (\x. f (x x)) (\x. f (x x));
+
+    factorial_definition = \self. \n. if (is_zero n)
+                    1
+                    (mult n (self (pred n)));
+
+    factorial = fixed_point_combinator factorial_definition;
+
+    -----------------------------------
+    -- Definições do trabalho abaixo --
+    -----------------------------------
+
+    -- [1.a]: a > b ?
+
+    maior = \a b. is_positive (sub a b);
+
+
+    -- [1.b]: a^3 + b
+
+    pow_definition = \self. \n exp. if (is_zero exp) 1 (fast_mul n (self n (pred exp)));
+    pow = fixed_point_combinator pow_definition;
+
+    polinomio = \a b. fast_add (pow a 3) b;
+
+
+    -- [1.c]: n / 3 ?
+
+    remainder_definition = \self. \dividend divisor.
+                                    if (menor dividend divisor) (if (is_zero dividend) 0 dividend)
+                                    (
+                                        fast_add 0 (self (sub dividend divisor) divisor)
+                                    );
+    remainder = fixed_point_combinator remainder_definition;
+
+    divByTres = \n. is_zero (remainder n 3);
+
+
+    -- [1.d]: floor(n / 3)
+
+    floor_div_definition = \self. \dividend divisor.
+                                    if (menor dividend divisor) 0
+                                    (
+                                        fast_add 1 (self (sub dividend divisor) divisor)
+                                    );
+    floor_div = fixed_point_combinator floor_div_definition;
+
+    divTres = \n. floor_div n 3;
+
+
+    -- [1.e]: (a, b) -> (b, a) se a > 0
+
+    invert_pair_if_first_positive = \p. if (is_positive (get_first p)) (swap p) (p);
+
+    invFrac = \a b. invert_pair_if_first_positive (pair a b);
+
+
+    -- [1.f]: (a, b) * (c, d) = (a * c, b * d)
+
+     mult_frac = \p1 p2. pair
+        (fast_mul (get_first p1) (get_first p2))
+        (fast_mul (get_second p1) (get_second p2));
+
+
+    -- [1.g]: [a1 * a2 * a3 * ... * an] if lista não vazia else 1
+
+    mult_list_definition = \self. \l.
+                                    if (is_empty l) 1 
+                                    (
+                                        fast_mul (head l) (self (tail l))
+                                    ); 
+
+    mult_list = fixed_point_combinator mult_list_definition;
+
+
+    -- [1.h]: Fibonacci
+
+    fibonacci_definition = \self. \n.
+                                    if (is_zero n) 0
+                                    (
+                                        if (is_zero (pred n)) 1
+                                        (
+                                            fast_add (self (pred n)) (self (sub n 2))
+                                        )
+                                    );
+    fib = fixed_point_combinator fibonacci_definition;
+    
+in
+    mult_list (
+        pair 1 (
+            pair 2 (
+                pair 3 (
+                    pair 4 empty
+                )
+            )
+        )
+    )
